@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  Image,
-  FlatList,
-  TouchableOpacity,
   ActivityIndicator,
+  Button,
+  FlatList,
+  Image,
   StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import axios from 'axios';
 import { API_BASE_URL } from '../../config';
 import { useThemeColors } from '../../constants/Colors';
 import { homeStyles } from '../../styles/HomeStyles';
@@ -19,7 +21,11 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const colors = useThemeColors();
-
+  const router = useRouter();
+  // Función para abrir la Modal de Login
+  const abrirModalLogin = useCallback(() => {
+    router.push('/modal');
+  }, [router]);
   useEffect(() => {
     fetchItems();
   }, []);
@@ -152,6 +158,9 @@ export default function HomeScreen() {
               Catálogo Digital
             </Text>
           </View>
+        </View>
+        <View style={{ position: 'absolute', right: 10, top: 10 }}> 
+          <Button title="Login" onPress={abrirModalLogin} />
         </View>
       </View>
 

@@ -27,6 +27,8 @@ export const Colors = {
     tint: '#4ade80',
     tabIconDefault: '#687076',
     tabIconSelected: '#4ade80',
+    primary: '#4ade80',
+    secondary: '#687076',
   },
   dark: {
     // para home
@@ -55,6 +57,8 @@ export const Colors = {
     tint: '#4ade80',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: '#4ade80',
+    primary: '#0b913cff',
+    secondary: '#687076',
   },
 };
 
