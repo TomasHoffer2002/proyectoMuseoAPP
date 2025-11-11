@@ -16,6 +16,7 @@ import { API_BASE_URL } from '../../config';
 import { useThemeColors } from '../../constants/Colors';
 import { searchStyles } from '../../styles/SearchStyles';
 
+
 export default function SearchScreen() {
   const [items, setItems] = useState([]);
   const [categorias, setCategorias] = useState([]);
@@ -25,9 +26,11 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const colors = useThemeColors();
+ 
 
   useEffect(() => {
     fetchData();
+    
   }, []);
 
   useEffect(() => {
@@ -74,6 +77,7 @@ export default function SearchScreen() {
 
     setFilteredItems(filtered);
   };
+
 
   const toggleCategory = (categoryValue) => {
     setSelectedCategory(selectedCategory === categoryValue ? null : categoryValue);
