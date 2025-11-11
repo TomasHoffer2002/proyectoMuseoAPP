@@ -1,31 +1,78 @@
 import axios from 'axios';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Button,
   FlatList,
   Image,
   StatusBar,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_BASE_URL } from '../../config';
 import { useThemeColors } from '../../constants/Colors';
 import { homeStyles } from '../../styles/HomeStyles';
 
+// IMPORTACIONES DE AUTENTICACIÓN 
+import { cerrarSesion, checkAuthStatus } from '../../services/login';
+
 export default function HomeScreen() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
   const colors = useThemeColors();
   const router = useRouter();
+
+  // ----------------------------------------------------
+  // LOGICA DE AUTENTICACION
+  // ----------------------------------------------------
+
+  // Función para verificar el estado de autenticación (lee AsyncStorage)
+  const checkLoginStatus = useCallback(async () => {
+    const status = await checkAuthStatus();
+    setIsLoggedIn(status);
+  }, []);
+
+  // 2. Hook para actualizar el estado cuando regresamos a esta pantalla (después de Login/Logout)
+  useFocusEffect(
+    useCallback(() => {
+      checkLoginStatus();
+    }, [checkLoginStatus])
+  );
+
+  // Manejador para cerrar sesión
+  const handleLogout = useCallback(() => {
+    Alert.alert(
+      "Cerrar Sesión",
+      "¿Estás seguro de que quieres cerrar tu sesión actual?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Sí, Cerrar Sesión", 
+          onPress: async () => {
+            await cerrarSesion();
+            setIsLoggedIn(false); // Actualiza el estado local
+          },
+          style: 'destructive'
+        }
+      ]
+    );
+  }, []);
+
   // Función para abrir la Modal de Login
   const abrirModalLogin = useCallback(() => {
     router.push('/modal');
   }, [router]);
+
+  // ----------------------------------------------------
+  // LOGICA DE DATOS
+  // ----------------------------------------------------
+
   useEffect(() => {
     fetchItems();
   }, []);
@@ -65,30 +112,60 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
+  // ******************************************************
+  // RENDERIZADO CONDICIONAL
+  // ******************************************************
+
+  // Función para mostrar la cabecera (usada en loading, error y final)
+  const renderLoginButton = () => {
+    if (isLoggedIn) {
+      return (
+        <Button 
+          title="Logout" 
+          onPress={handleLogout} 
+          color={colors.error} // Usamos el color de error (rojo) para la acción de logout
+        />
+      );
+    }
+    // Si no está logueado, muestra Login
+    return (
+      <Button 
+        title="Login" 
+        onPress={abrirModalLogin} 
+        color={colors.accent} 
+      />
+    );
+  };
+
+  const HeaderView = (
+    <View style={[homeStyles.header, { 
+      backgroundColor: colors.background,
+      borderBottomColor: colors.headerBorder 
+    }]}>
+      <View style={homeStyles.logoContainer}>
+        <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
+          <Text style={homeStyles.logoText}>🏛️</Text>
+        </View>
+        <View style={homeStyles.headerTextContainer}>
+          <Text style={[homeStyles.headerTitle, { color: colors.title }]}>
+            Museo de Ciencias Naturales
+          </Text>
+          <Text style={[homeStyles.headerSubtitle, { color: colors.subtitle }]}>
+            Catálogo Digital
+          </Text>
+        </View>
+        <View style={{ position: 'absolute', right: 10, top: 10 }}> 
+          {renderLoginButton()}
+        </View>
+      </View>
+    </View>
+  );
+
   if (loading) {
     return (
       <SafeAreaView style={[homeStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-        
-        <View style={[homeStyles.header, { 
-          backgroundColor: colors.background,
-          borderBottomColor: colors.headerBorder 
-        }]}>
-          <View style={homeStyles.logoContainer}>
-            <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
-              <Text style={homeStyles.logoText}>🏛️</Text>
-            </View>
-            <View style={homeStyles.headerTextContainer}>
-              <Text style={[homeStyles.headerTitle, { color: colors.title }]}>
-                Museo de Ciencias Naturales
-              </Text>
-              <Text style={[homeStyles.headerSubtitle, { color: colors.subtitle }]}>
-                Catálogo Digital
-              </Text>
-            </View>
-          </View>
-        </View>
-        
+        {HeaderView}
         <View style={homeStyles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accent} />
           <Text style={[homeStyles.loadingText, { color: colors.subtitle }]}>
@@ -103,26 +180,7 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={[homeStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-        
-        <View style={[homeStyles.header, { 
-          backgroundColor: colors.background,
-          borderBottomColor: colors.headerBorder 
-        }]}>
-          <View style={homeStyles.logoContainer}>
-            <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
-              <Text style={homeStyles.logoText}>🏛️</Text>
-            </View>
-            <View style={homeStyles.headerTextContainer}>
-              <Text style={[homeStyles.headerTitle, { color: colors.title }]}>
-                Museo de Ciencias Naturales
-              </Text>
-              <Text style={[homeStyles.headerSubtitle, { color: colors.subtitle }]}>
-                Catálogo Digital
-              </Text>
-            </View>
-          </View>
-        </View>
-        
+        {HeaderView}
         <View style={homeStyles.errorContainer}>
           <Text style={[homeStyles.errorText, { color: colors.error }]}>
             {error}
@@ -137,33 +195,11 @@ export default function HomeScreen() {
       </SafeAreaView>
     );
   }
-
+    
   return (
     <SafeAreaView style={[homeStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-      
-      <View style={[homeStyles.header, { 
-        backgroundColor: colors.background,
-        borderBottomColor: colors.headerBorder 
-      }]}>
-        <View style={homeStyles.logoContainer}>
-          <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
-            <Text style={homeStyles.logoText}>🏛️</Text>
-          </View>
-          <View style={homeStyles.headerTextContainer}>
-            <Text style={[homeStyles.headerTitle, { color: colors.title }]}>
-              Museo de Ciencias Naturales
-            </Text>
-            <Text style={[homeStyles.headerSubtitle, { color: colors.subtitle }]}>
-              Catálogo Digital
-            </Text>
-          </View>
-        </View>
-        <View style={{ position: 'absolute', right: 10, top: 10 }}> 
-          <Button title="Login" onPress={abrirModalLogin} />
-        </View>
-      </View>
-
+      {HeaderView}
       <FlatList
         data={items}
         renderItem={renderItem}

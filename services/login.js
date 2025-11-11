@@ -48,3 +48,30 @@ export async function iniciarSesion(usuario, password) {
     throw error; 
   }
 }
+/**
+ * Verifica si el usuario está autenticado comprobando el token en AsyncStorage.
+ * @returns Una promesa que resuelve a true si hay token, false si no.
+ */
+export async function checkAuthStatus() {
+    try {
+        const token = await AsyncStorage.getItem('userToken');
+        // Devuelve true si el token existe y no es una cadena vacía, de lo contrario false.
+        return !!token; 
+    } catch (e) {
+        console.error('Error al leer el token de autenticación:', e);
+        return false;
+    }
+}
+
+/**
+ * Cierra la sesión eliminando el token de AsyncStorage.
+ * @returns Una promesa vacía.
+ */
+export async function cerrarSesion() {
+    try {
+        await AsyncStorage.removeItem('userToken');
+        console.log('Sesión cerrada exitosamente.');
+    } catch (e) {
+        console.error('Error al cerrar sesión:', e);
+    }
+}
