@@ -3,11 +3,23 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import * as Notifications from 'expo-notifications';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { EventService } from '@/services/EventService';
+
+// Configurar el handler de notificaciones
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -48,6 +60,40 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const [lastEventId, setLastEventId] = useState(0);
+  const intervalRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Solicitar permisos de notificaciones
+    (async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Permisos de notificaciones denegados');
+      }
+    })();
+
+    // Iniciar polling de eventos cada 3 segundos
+    intervalRef.current = setInterval(async () => {
+      const result = await EventService.getNewEvents(lastEventId);
+      if (result.success && result.data.length > 0) {
+        // Hay nuevos eventos, mostrar notificación de cada uno
+        for (const evento of result.data) {
+          if (evento.id > lastEventId) {
+            console.log('Nuevo evento detectado:', evento);
+            await EventService.showEventNotification(evento);
+            setLastEventId(evento.id);
+          }
+        }
+      }
+    }, 3000);
+
+    // Limpiar interval al desmontar
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [lastEventId]);
 
   return (
     <SafeAreaProvider>
