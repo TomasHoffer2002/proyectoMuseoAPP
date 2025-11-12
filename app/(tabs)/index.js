@@ -1,10 +1,10 @@
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import axios from 'axios';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Button,
   FlatList,
   Image,
   StatusBar,
@@ -118,22 +118,27 @@ export default function HomeScreen() {
 
   // Función para mostrar la cabecera (usada en loading, error y final)
   const renderLoginButton = () => {
+    const iconSize = 24;
     if (isLoggedIn) {
       return (
-        <Button 
-          title="Logout" 
-          onPress={handleLogout} 
-          color={colors.error} // Usamos el color de error (rojo) para la acción de logout
-        />
+        <TouchableOpacity onPress={handleLogout} hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}>
+          <FontAwesome 
+            name="sign-out" // Icono de Salida
+            size={iconSize} 
+            color={colors.error} // Rojo para acción destructiva
+          />
+        </TouchableOpacity>
       );
     }
     // Si no está logueado, muestra Login
     return (
-      <Button 
-        title="Login" 
-        onPress={abrirModalLogin} 
-        color={colors.accent} 
-      />
+      <TouchableOpacity onPress={abrirModalLogin} hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}>
+        <FontAwesome 
+          name="user-circle" // Icono de Perfil
+          size={iconSize} 
+          color={colors.accent} // Color principal
+        />
+      </TouchableOpacity>
     );
   };
 
