@@ -5,8 +5,9 @@ export const searchStyles = StyleSheet.create({
     flex: 1,
   },
   searchSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    paddingTop:14,
   },
   searchInputContainer: {
     flexDirection: 'row',
