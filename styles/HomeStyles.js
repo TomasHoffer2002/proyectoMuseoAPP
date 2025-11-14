@@ -36,6 +36,7 @@ export const homeStyles = StyleSheet.create({
     fontSize: 14,
   },
   gridContainer: {
+    marginTop:-16,
     padding: 12,
   },
   row: {

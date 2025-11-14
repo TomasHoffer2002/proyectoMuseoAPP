@@ -2,6 +2,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import axios from 'axios';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
+import { CaruselApp } from '../../components/organisms/Carousel';
 import {
   ActivityIndicator,
   Alert,
@@ -10,7 +11,8 @@ import {
   StatusBar,
   Text,
   TouchableOpacity,
-  View
+  View,
+  ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_BASE_URL } from '../../config';
@@ -22,6 +24,8 @@ import { cerrarSesion, checkAuthStatus } from '../../services/login';
 
 export default function HomeScreen() {
   const [items, setItems] = useState([]);
+  const [featuredItems, setFeaturedItems] = useState([]);
+  const [regularItems, setRegularItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false); 
@@ -81,8 +85,14 @@ export default function HomeScreen() {
     try {
       setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/apiLogin/obtenerItems.php`);
-      setItems(response.data);
+      const allItems = response.data;
+      const featured = allItems.filter(item => item.featured === true);
+      const regular = allItems.filter(item => item.featured !== true);
+      setItems(allItems);
+      setFeaturedItems(featured);
+      setRegularItems(regular);
       setError(null);
+
     } catch (err) {
       console.error('Error al obtener items:', err);
       setError('No se pudieron cargar los items del museo');
@@ -91,11 +101,19 @@ export default function HomeScreen() {
     }
   };
 
+  const handleItemPress = (item) => {
+    console.log('Item seleccionado:', item);
+    // TODO: Navegar a pantalla de detalle
+  };
+
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={[homeStyles.card, { 
-      backgroundColor: colors.cardBackground,
-      borderColor: colors.cardBorder 
-    }]}>
+    <TouchableOpacity 
+      style={[homeStyles.card, { 
+        backgroundColor: colors.cardBackground,
+        borderColor: colors.cardBorder 
+      }]}
+      onPress={() => handleItemPress(item)}
+    >
       <Image
         source={{ uri: `${API_BASE_URL}${item.imageUrl}` }}
         style={[homeStyles.cardImage, { backgroundColor: colors.imagePlaceholder }]}
@@ -111,6 +129,7 @@ export default function HomeScreen() {
       </View>
     </TouchableOpacity>
   );
+
 
   // ******************************************************
   // RENDERIZADO CONDICIONAL
@@ -170,7 +189,26 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={[homeStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-        {HeaderView}
+        
+        <View style={[homeStyles.header, { 
+          backgroundColor: colors.background,
+          borderBottomColor: colors.headerBorder 
+        }]}>
+          <View style={homeStyles.logoContainer}>
+            <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
+              <Text style={homeStyles.logoText}>🏛️</Text>
+            </View>
+            <View style={homeStyles.headerTextContainer}>
+              <Text style={[homeStyles.headerTitle, { color: colors.title }]}>
+                Museo de Ciencias Naturales
+              </Text>
+              <Text style={[homeStyles.headerSubtitle, { color: colors.subtitle }]}>
+                Catálogo Digital
+              </Text>
+            </View>
+          </View>
+        </View>
+        
         <View style={homeStyles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accent} />
           <Text style={[homeStyles.loadingText, { color: colors.subtitle }]}>
@@ -185,7 +223,26 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={[homeStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-        {HeaderView}
+        
+        <View style={[homeStyles.header, { 
+          backgroundColor: colors.background,
+          borderBottomColor: colors.headerBorder 
+        }]}>
+          <View style={homeStyles.logoContainer}>
+            <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
+              <Text style={homeStyles.logoText}>🏛️</Text>
+            </View>
+            <View style={homeStyles.headerTextContainer}>
+              <Text style={[homeStyles.headerTitle, { color: colors.title }]}>
+                Museo de Ciencias Naturales
+              </Text>
+              <Text style={[homeStyles.headerSubtitle, { color: colors.subtitle }]}>
+                Catálogo Digital
+              </Text>
+            </View>
+          </View>
+        </View>
+        
         <View style={homeStyles.errorContainer}>
           <Text style={[homeStyles.errorText, { color: colors.error }]}>
             {error}
@@ -204,16 +261,54 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={[homeStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-      {HeaderView}
-      <FlatList
-        data={items}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
-        contentContainerStyle={homeStyles.gridContainer}
-        columnWrapperStyle={homeStyles.row}
-        showsVerticalScrollIndicator={false}
-      />
+      
+      {/* Header */}
+      <View style={[homeStyles.header, { 
+        backgroundColor: colors.background,
+        borderBottomColor: colors.headerBorder 
+      }]}>
+        <View style={homeStyles.logoContainer}>
+          <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
+            <Text style={homeStyles.logoText}>🏛️</Text>
+          </View>
+          <View style={homeStyles.headerTextContainer}>
+            <Text style={[homeStyles.headerTitle, { color: colors.title }]}>
+              Museo de Ciencias Naturales
+            </Text>
+            <Text style={[homeStyles.headerSubtitle, { color: colors.subtitle }]}>
+              Catálogo Digital
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Carrusel de items destacados (featured = true) */}
+        {featuredItems.length > 0 && (
+          <CaruselApp
+            items={featuredItems}
+            onItemPress={handleItemPress}
+          />
+        )}
+
+        {/* Título de toda la colección */}
+        {regularItems.length > 0 && (
+          <View style={{ paddingHorizontal: 20, marginBottom: 12, marginTop: 8 }}>
+            <Text style={[homeStyles.headerTitle, { color: colors.title, fontSize: 20 }]}>
+                Otras colecciones
+            </Text>
+          </View>
+        )}
+
+        {/* Grid de items regulares (featured = false) */}
+        <View style={[homeStyles.gridContainer, { flexDirection: 'row', flexWrap: 'wrap' }]}>
+          {regularItems.map((item) => (
+            <View key={item.id} style={{ width: '48%', marginBottom: 12 }}>
+              {renderItem({ item })}
+            </View>
+          ))}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
