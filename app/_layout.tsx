@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
+import { MuseumThemeProvider } from '@/components/ThemeContext';
+
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { EventService } from '@/services/EventService';
@@ -97,13 +99,13 @@ function RootLayoutNav() {
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <MuseumThemeProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="auth" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-      </ThemeProvider>
+        </Stack>
+        </MuseumThemeProvider>
     </SafeAreaProvider>
   );
 }

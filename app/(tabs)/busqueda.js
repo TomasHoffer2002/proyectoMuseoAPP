@@ -13,8 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
-import { useThemeColors } from '../../constants/Colors';
 import { searchStyles } from '../../styles/SearchStyles';
+import { useTheme } from '../../components/ThemeContext';
 
 
 export default function SearchScreen() {
@@ -25,7 +25,7 @@ export default function SearchScreen() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const colors = useThemeColors();
+  const {colors} = useTheme();
  
 
   useEffect(() => {

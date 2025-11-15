@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { CaruselApp } from '../../components/organisms/Carousel';
+import { useTheme } from '../../components/ThemeContext';
 import {
   ActivityIndicator,
   Alert,
@@ -16,8 +17,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_BASE_URL } from '../../config';
-import { useThemeColors } from '../../constants/Colors';
 import { homeStyles } from '../../styles/HomeStyles';
+import { CoinService } from '../../services/CoinService';
 
 // IMPORTACIONES DE AUTENTICACIÓN 
 import { cerrarSesion, checkAuthStatus } from '../../services/login';
@@ -29,8 +30,14 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false); 
-  const colors = useThemeColors();
+  const {colors} = useTheme();
   const router = useRouter();
+  //estados para manejo de monedas
+  const [coinNotification, setCoinNotification] = useState({
+    visible: false,
+    coins: 0,
+    message: ''
+  });
 
   // ----------------------------------------------------
   // LOGICA DE AUTENTICACION
@@ -73,13 +80,26 @@ export default function HomeScreen() {
     router.push('/modal');
   }, [router]);
 
-  // ----------------------------------------------------
-  // LOGICA DE DATOS
-  // ----------------------------------------------------
 
   useEffect(() => {
     fetchItems();
   }, []);
+
+  // Verificar login diario y otorgar monedas
+  useEffect(() => {
+    checkDailyReward();
+  }, []);
+
+  const checkDailyReward = async () => {
+    const result = await CoinService.checkDailyLogin();
+    if (result.earnedCoins) {
+      setCoinNotification({
+        visible: true,
+        coins: result.coins,
+        message: '¡Bienvenido! Recompensa diaria'
+      });
+    }
+  };
 
   const fetchItems = async () => {
     try {
@@ -103,6 +123,15 @@ export default function HomeScreen() {
 
   const handleItemPress = (item) => {
     console.log('Item seleccionado:', item);
+    // Otorgar monedas por ver el item
+    /*const result = await CoinService.viewItem(item.id);
+    if (result.earnedCoins) {
+      setCoinNotification({
+        visible: true,
+        coins: result.coins,
+        message: `Viste: ${item.title}`
+      });
+    }*/
     // TODO: Navegar a pantalla de detalle
   };
 
@@ -137,14 +166,14 @@ export default function HomeScreen() {
 
   // Función para mostrar la cabecera (usada en loading, error y final)
   const renderLoginButton = () => {
-    const iconSize = 24;
+    const iconSize = 29;
     if (isLoggedIn) {
       return (
         <TouchableOpacity onPress={handleLogout} hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}>
           <FontAwesome 
-            name="sign-out" // Icono de Salida
+            name="sign-out" // Icono de Perfil
             size={iconSize} 
-            color={colors.error} // Rojo para acción destructiva
+            color={colors.accent}
           />
         </TouchableOpacity>
       );
@@ -153,7 +182,7 @@ export default function HomeScreen() {
     return (
       <TouchableOpacity onPress={abrirModalLogin} hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}>
         <FontAwesome 
-          name="user-circle" // Icono de Perfil
+          name="sign-in" 
           size={iconSize} 
           color={colors.accent} // Color principal
         />
@@ -190,24 +219,7 @@ export default function HomeScreen() {
       <SafeAreaView style={[homeStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
         
-        <View style={[homeStyles.header, { 
-          backgroundColor: colors.background,
-          borderBottomColor: colors.headerBorder 
-        }]}>
-          <View style={homeStyles.logoContainer}>
-            <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
-              <Text style={homeStyles.logoText}>🏛️</Text>
-            </View>
-            <View style={homeStyles.headerTextContainer}>
-              <Text style={[homeStyles.headerTitle, { color: colors.title }]}>
-                Museo de Ciencias Naturales
-              </Text>
-              <Text style={[homeStyles.headerSubtitle, { color: colors.subtitle }]}>
-                Catálogo Digital
-              </Text>
-            </View>
-          </View>
-        </View>
+        {HeaderView}
         
         <View style={homeStyles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accent} />
@@ -224,24 +236,7 @@ export default function HomeScreen() {
       <SafeAreaView style={[homeStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
         
-        <View style={[homeStyles.header, { 
-          backgroundColor: colors.background,
-          borderBottomColor: colors.headerBorder 
-        }]}>
-          <View style={homeStyles.logoContainer}>
-            <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
-              <Text style={homeStyles.logoText}>🏛️</Text>
-            </View>
-            <View style={homeStyles.headerTextContainer}>
-              <Text style={[homeStyles.headerTitle, { color: colors.title }]}>
-                Museo de Ciencias Naturales
-              </Text>
-              <Text style={[homeStyles.headerSubtitle, { color: colors.subtitle }]}>
-                Catálogo Digital
-              </Text>
-            </View>
-          </View>
-        </View>
+        {HeaderView}
         
         <View style={homeStyles.errorContainer}>
           <Text style={[homeStyles.errorText, { color: colors.error }]}>
@@ -261,26 +256,8 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={[homeStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-      
-      {/* Header */}
-      <View style={[homeStyles.header, { 
-        backgroundColor: colors.background,
-        borderBottomColor: colors.headerBorder 
-      }]}>
-        <View style={homeStyles.logoContainer}>
-          <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
-            <Text style={homeStyles.logoText}>🏛️</Text>
-          </View>
-          <View style={homeStyles.headerTextContainer}>
-            <Text style={[homeStyles.headerTitle, { color: colors.title }]}>
-              Museo de Ciencias Naturales
-            </Text>
-            <Text style={[homeStyles.headerSubtitle, { color: colors.subtitle }]}>
-              Catálogo Digital
-            </Text>
-          </View>
-        </View>
-      </View>
+
+      {HeaderView}
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Carrusel de items destacados (featured = true) */}

@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Dimensions, Text } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import { CarouselCard } from '../molecules/CarouselCard';
-import { useThemeColors } from '../../constants/Colors';
+import { useTheme } from '../../components/ThemeContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 export const CaruselApp = ({ items, onItemPress }) => {
-  const colors = useThemeColors();
+  const {colors} = useTheme();
   const [activeIndex, setActiveIndex] = useState(0);
 
   const renderItem = ({ item }) => (
