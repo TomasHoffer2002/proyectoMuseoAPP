@@ -60,12 +60,43 @@ export const Colors = {
     primary: '#0b913cff',
     secondary: '#687076',
   },
+  //tema especial para los que canjean sus puntos
+  night: {
+    background: '#1a0a2e',
+    cardBackground: '#2d1b4e',
+    cardBorder: 'rgba(138, 43, 226, 0.3)',
+    headerBorder: 'rgba(138, 43, 226, 0.3)',
+    title: '#ffffff',
+    subtitle: '#b19cd9',
+    category: '#b19cd9',
+    accent: '#8a2be2',
+    error: '#ff6b9d',
+    imagePlaceholder: '#1a0a2e',
+    statusBar: 'light-content',
+    searchBackground: '#2d1b4e',
+    searchBorder: 'rgba(138, 43, 226, 0.3)',
+    searchPlaceholder: '#b19cd9',
+    searchIcon: '#b19cd9',
+    filterButton: '#2d1b4e',
+    filterButtonActive: '#8a2be2',
+    filterTextActive: '#ffffff',
+    filterText: '#b19cd9',
+    text: '#e0b0ff',
+    tint: '#8a2be2',
+    tabIconDefault: '#b19cd9',
+    tabIconSelected: '#8a2be2',
+    primary: '#8a2be2',
+    secondary: '#b19cd9',
+  },
 };
 
-// Hook personalizado para obtener los colores según el tema
 import { useColorScheme } from 'react-native';
 
 export const useThemeColors = () => {
   const colorScheme = useColorScheme();
   return Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+};
+// funcion para obtener tema personalizado
+export const getCustomTheme = (themeName) => {
+  return Colors[themeName] || Colors.light;
 };
