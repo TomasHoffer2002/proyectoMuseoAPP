@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_BASE_URL } from '../../config';
 import { homeStyles } from '../../styles/HomeStyles';
 import { CoinService } from '../../services/CoinService';
+import { CoinNotification } from '../../components/molecules/CoinNotification';
 
 // IMPORTACIONES DE AUTENTICACIÓN 
 import { cerrarSesion, checkAuthStatus } from '../../services/login';
@@ -121,18 +122,18 @@ export default function HomeScreen() {
     }
   };
 
-  const handleItemPress = (item) => {
+  const handleItemPress = async (item) => {
     console.log('Item seleccionado:', item);
     // Otorgar monedas por ver el item
-    /*const result = await CoinService.viewItem(item.id);
+    const result = await CoinService.viewItem(item.id);
     if (result.earnedCoins) {
       setCoinNotification({
         visible: true,
         coins: result.coins,
-        message: `Viste: ${item.title}`
+        message: `Primera vez viendo: ${item.title}`
       });
-    }*/
-    // TODO: Navegar a pantalla de detalle
+    }
+    router.push(`/item/${item.id}`);
   };
 
   const renderItem = ({ item }) => (
@@ -256,6 +257,13 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={[homeStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
+      {/* Notificación de monedas */}
+      <CoinNotification
+        visible={coinNotification.visible}
+        coins={coinNotification.coins}
+        message={coinNotification.message}
+        onHide={() => setCoinNotification({ ...coinNotification, visible: false })}
+      />
 
       {HeaderView}
 
