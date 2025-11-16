@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -15,6 +16,8 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../config';
 import { searchStyles } from '../../styles/SearchStyles';
 import { useTheme } from '../../components/ThemeContext';
+import { CoinService } from '../../services/CoinService';
+import { CoinNotification } from '../../components/molecules/CoinNotification';
 
 
 export default function SearchScreen() {
@@ -26,6 +29,13 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const {colors} = useTheme();
+  const router = useRouter();
+  // Estado para monedas
+  const [coinNotification, setCoinNotification] = useState({
+    visible: false,
+    coins: 0,
+    message: ''
+  });
  
 
   useEffect(() => {
@@ -36,6 +46,19 @@ export default function SearchScreen() {
   useEffect(() => {
     filterItems();
   }, [searchQuery, selectedCategory, items]);
+
+  const handleItemPress = async (item) => {
+    // Otorgar monedas
+    const result = await CoinService.viewItem(item.id);
+    if (result.earnedCoins) {
+      setCoinNotification({
+        visible: true,
+        coins: result.coins,
+        message: `Primera vez viendo: ${item.title}`
+      });
+    }
+    router.push(`/item/${item.id}`);
+  };
 
   const fetchData = async () => {
     try {
@@ -87,7 +110,8 @@ export default function SearchScreen() {
     <TouchableOpacity style={[searchStyles.card, { 
       backgroundColor: colors.cardBackground,
       borderColor: colors.cardBorder 
-    }]}>
+    }]}
+      onPress={() => handleItemPress(item)}>
       <Image
         source={{ uri: `${API_BASE_URL}${item.imageUrl}` }}
         style={[searchStyles.cardImage, { backgroundColor: colors.imagePlaceholder }]}
@@ -140,6 +164,13 @@ export default function SearchScreen() {
   return (
     <SafeAreaView style={[searchStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
+      {/* Notificación de monedas */}
+      <CoinNotification
+        visible={coinNotification.visible}
+        coins={coinNotification.coins}
+        message={coinNotification.message}
+        onHide={() => setCoinNotification({ ...coinNotification, visible: false })}
+      />
       
       {/* Sección de búsqueda y filtros */}
       <View style={searchStyles.searchSection}>
