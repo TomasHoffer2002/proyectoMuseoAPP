@@ -1,10 +1,7 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
-
-import { Colors } from '@/constants/Colors';  
-import { useColorScheme } from '@/components/useColorScheme';
+import { Tabs } from 'expo-router';
+import { useTheme } from '@/components/ThemeContext';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
@@ -16,14 +13,21 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const {colors} = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
+        tabBarActiveTintColor: colors.tint,
+        tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarStyle: {
+          backgroundColor: colors.background, // Fondo de tabs
+          borderTopColor: colors.headerBorder, // Borde superior
+        },
+        headerStyle: {
+          backgroundColor: colors.background, // Fondo del header
+        },
+        headerTintColor: colors.title, // Color del texto del header
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
@@ -31,7 +35,7 @@ export default function TabLayout() {
         options={{
           title: 'Explorar',
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-          headerShown: false,  // Ocultamos el header porque ya tenemos uno custom
+          headerShown: false,  // Ocultamos el header porque ya tenemos uno propio
         }}
       />
       <Tabs.Screen

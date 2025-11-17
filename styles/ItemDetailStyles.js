@@ -125,6 +125,7 @@ export const itemDetailStyles = StyleSheet.create({
   commentAuthor: {
     fontSize: 14,
     fontWeight: '600',
+    flex: 1,
   },
   commentDate: {
     fontSize: 12,
