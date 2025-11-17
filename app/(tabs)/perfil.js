@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StatusBar, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { profileStyles } from '../../styles/ProfileStyles';
@@ -6,6 +6,7 @@ import { CoinService } from '../../services/CoinService';
 import { BenefitService } from '../../services/BenefitService';
 import { useTheme } from '../../components/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const ACTIVE_THEME_KEY = '@museum_active_theme';
 
@@ -15,17 +16,60 @@ export default function PerfilScreen() {
   const [nightThemeUnlocked, setNightThemeUnlocked] = useState(false);
   const [collectorBadgeUnlocked, setCollectorBadgeUnlocked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState('Visitante del Museo');
 
   // Obtener colores según el tema activo
   const { colors, activeTheme, toggleTheme } = useTheme();
 
-  useEffect(() => {
-    loadUserData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      // Definimos la función que carga los datos
+      const loadUserData = async () => {
+        try {
+          setLoading(true);
+          
+          const storedUserName = await AsyncStorage.getItem('userName');
+          
+          if (storedUserName) {
+            setUserName(storedUserName);
+          } else {
+            // Si no hay nombre, resetea al valor por defecto
+            setUserName('Visitante del Museo'); 
+          }
+          
+          // Cargar estadísticas de monedas
+          const stats = await CoinService.getStats();
+          setCoins(stats.totalCoins);
+          setItemsViewed(stats.itemsViewed);
+
+          // Cargar beneficios desbloqueados
+          const benefits = await BenefitService.getUnlockedBenefits();
+          setNightThemeUnlocked(benefits.nightTheme);
+          setCollectorBadgeUnlocked(benefits.collectorBadge);
+        
+        } catch (error) {
+          console.error('Error al cargar datos del usuario:', error);
+          // En caso de error, también resetea
+          setUserName('Visitante del Museo');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      // Llamamos a la función
+      loadUserData();
+
+    }, []) // El array vacío asegura que la lógica no se repita innecesariamente
+  );
 
   const loadUserData = async () => {
     try {
       setLoading(true);
+      //cargar nombre de usuario
+      const storedUserName = await AsyncStorage.getItem('userName');
+      if (storedUserName) {
+        setUserName(storedUserName);
+      }
       
       // Cargar estadísticas de monedas
       const stats = await CoinService.getStats();
@@ -115,7 +159,7 @@ export default function PerfilScreen() {
           </View>
           
           <Text style={[profileStyles.userName, { color: colors.title }]}>
-            Visitante del Museo
+            {userName}
           </Text>
 
           {/* Estadísticas */}

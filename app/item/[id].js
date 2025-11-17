@@ -267,7 +267,10 @@ export default function ItemDetailScreen() {
                   style={[itemDetailStyles.commentCard, { backgroundColor: colors.cardBackground }]}
                 >
                   <View style={itemDetailStyles.commentHeader}>
-                    <Text style={[itemDetailStyles.commentAuthor, { color: colors.title }]}>
+                    <Text style={[itemDetailStyles.commentAuthor, { color: colors.title }]}
+                    numberOfLines={1} 
+                    ellipsizeMode="tail" 
+                    >
                       {comment.autor_usuario}
                     </Text>
                     <Text style={[itemDetailStyles.commentDate, { color: colors.subtitle }]}>
