@@ -57,7 +57,7 @@ export const CoinService = {
         const newCoins = await CoinService.addCoins(10);
         return {
           earnedCoins: true,
-          coins: 10,
+          coins: 100,
           totalCoins: newCoins
         };
       }
@@ -92,7 +92,7 @@ export const CoinService = {
         const newCoins = await CoinService.addCoins(5);
         return {
           earnedCoins: true,
-          coins: 5,
+          coins: 50,
           totalCoins: newCoins,
           isFirstView: true
         };

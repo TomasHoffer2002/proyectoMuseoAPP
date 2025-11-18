@@ -152,4 +152,61 @@ export const itemDetailStyles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
   },
+  // Input de Comentarios
+  inputSection: {
+    marginTop: 10,
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+  },
+  textInput: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 12,
+    paddingTop: 12, 
+    fontSize: 14,
+    minHeight: 50,
+    maxHeight: 100,
+    borderWidth: 1,
+  },
+  sendButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Modal Pantalla Completa
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 50, // Ajustado para evitar el notch/isla dinámica
+    right: 20,
+    zIndex: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 8,
+    borderRadius: 20,
+  },
+  fullscreenImageWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullscreenImage: {
+    width: '100%',
+    height: '100%',
+  },
 });

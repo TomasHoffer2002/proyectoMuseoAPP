@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -10,15 +10,21 @@ import {
   StatusBar,
   Text,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
   View,
+  //Modal,
+  Pressable
 } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../components/ThemeContext';
 import { API_BASE_URL } from '../../config';
 import { itemDetailStyles } from '../../styles/ItemDetailStyles';
+import CommentInput from '../../components/CommentInput';
+import ImageViewing from 'react-native-image-viewing';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export default function ItemDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -28,7 +34,9 @@ export default function ItemDetailScreen() {
   const [item, setItem] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Estados para el carrusel y modal
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [fullScreenVisible, setFullScreenVisible] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -55,6 +63,12 @@ export default function ItemDetailScreen() {
     } catch (error) {
       console.error('Error al cargar comentarios:', error);
     }
+  };
+
+  // Función para abrir el visor
+  const openFullScreen = (index) => {
+    setActiveImageIndex(index);
+    setFullScreenVisible(true);
   };
 
   const BtnReturn = () => {
@@ -121,178 +135,193 @@ export default function ItemDetailScreen() {
   }
 
   // Combinar imagen principal con imágenes adicionales
-  const allImages = [item.imageUrl, ...(item.images || [])];
+ const allImages = [item.imageUrl, ...(item.images || [])];
+  //array de imágenes para el Visor
+ const imagesForViewer = allImages.map(img => ({
+    uri: `${API_BASE_URL}${img}`
+  }));
+  
 
   return (
     <SafeAreaView style={[itemDetailStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
       <BtnReturn />
       
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Carrusel de imágenes */}
-        <View style={itemDetailStyles.carouselContainer}>
-          <Carousel
-            loop={false}
-            width={width}
-            height={350}
-            data={allImages}
-            onSnapToItem={(index) => setActiveImageIndex(index)}
-            renderItem={({ item: imageUrl }) => (
-              <View style={itemDetailStyles.imageWrapper}>
-                <Image
-                  source={{ uri: `${API_BASE_URL}${imageUrl}` }}
-                  style={[itemDetailStyles.image, { backgroundColor: colors.imagePlaceholder }]}
-                  resizeMode="cover"
-                />
-              </View>
-            )}
-          />
-          
-          {/* Indicadores de imagen */}
-          <View style={itemDetailStyles.imageDots}>
-            {allImages.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  itemDetailStyles.dot,
-                  {
-                    backgroundColor: index === activeImageIndex ? colors.accent : colors.subtitle,
-                    opacity: index === activeImageIndex ? 1 : 0.3,
-                  }
-                ]}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* Contenido */}
-        <View style={itemDetailStyles.content}>
-          {/* Badge de categoría */}
-          <View style={[itemDetailStyles.badge, { backgroundColor: colors.accent }]}>
-            <Text style={[itemDetailStyles.badgeText, { color: '#1a2332' }]}>
-              {item.category_label}
-            </Text>
-          </View>
-
-          {/* Título */}
-          <Text style={[itemDetailStyles.title, { color: colors.title }]}>
-            {item.title}
-          </Text>
-
-          {/* Descripción corta */}
-          <Text style={[itemDetailStyles.description, { color: colors.subtitle }]}>
-            {item.description}
-          </Text>
-
-          {/* Descripción larga */}
-          {item.longDescription && (
-            <Text style={[itemDetailStyles.longDescription, { color: colors.title }]}>
-              {item.longDescription}
-            </Text>
-          )}
-
-          {/* Información del espécimen */}
-          <View style={itemDetailStyles.infoSection}>
-            <Text style={[itemDetailStyles.sectionTitle, { color: colors.title }]}>
-              📋 Información del Espécimen
-            </Text>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Carrusel Principal (Pequeño) */}
+          <View style={itemDetailStyles.carouselContainer}>
+            <Carousel
+              loop={false}
+              width={width}
+              height={350}
+              data={allImages}
+              onSnapToItem={(index) => setActiveImageIndex(index)}
+              renderItem={({ item: imageUrl, index }) => (
+                <Pressable 
+                  onPress={() => openFullScreen(index)} 
+                  style={itemDetailStyles.imageWrapper}
+                >
+                  <Image
+                    source={{ uri: `${API_BASE_URL}${imageUrl}` }}
+                    style={[itemDetailStyles.image, { backgroundColor: colors.imagePlaceholder }]}
+                    resizeMode="cover"
+                  />
+                </Pressable>
+              )}
+            />
             
-            <View style={[itemDetailStyles.infoCard, { backgroundColor: colors.cardBackground }]}>
-              {item.period && (
-                <View style={itemDetailStyles.infoRow}>
-                  <Text style={[itemDetailStyles.infoLabel, { color: colors.subtitle }]}>Período:</Text>
-                  <Text style={[itemDetailStyles.infoValue, { color: colors.title }]}>{item.period}</Text>
-                </View>
-              )}
-              
-              {item.discoveryDate && (
-                <View style={itemDetailStyles.infoRow}>
-                  <Text style={[itemDetailStyles.infoLabel, { color: colors.subtitle }]}>Descubrimiento:</Text>
-                  <Text style={[itemDetailStyles.infoValue, { color: colors.title }]}>{item.discoveryDate}</Text>
-                </View>
-              )}
-              
-              {item.location && (
-                <View style={itemDetailStyles.infoRow}>
-                  <Text style={[itemDetailStyles.infoLabel, { color: colors.subtitle }]}>Ubicación:</Text>
-                  <Text style={[itemDetailStyles.infoValue, { color: colors.title }]}>{item.location}</Text>
-                </View>
-              )}
-              
-              {item.dimensions && (
-                <View style={itemDetailStyles.infoRow}>
-                  <Text style={[itemDetailStyles.infoLabel, { color: colors.subtitle }]}>Dimensiones:</Text>
-                  <Text style={[itemDetailStyles.infoValue, { color: colors.title }]}>{item.dimensions}</Text>
-                </View>
-              )}
-              
-              {item.weight && (
-                <View style={itemDetailStyles.infoRow}>
-                  <Text style={[itemDetailStyles.infoLabel, { color: colors.subtitle }]}>Peso:</Text>
-                  <Text style={[itemDetailStyles.infoValue, { color: colors.title }]}>{item.weight}</Text>
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* Tags */}
-          {item.tags && item.tags.length > 0 && (
-            <View style={itemDetailStyles.tagsContainer}>
-              {item.tags.map((tag, index) => (
+            {/* Indicadores */}
+            <View style={itemDetailStyles.imageDots}>
+              {allImages.map((_, index) => (
                 <View
                   key={index}
-                  style={[itemDetailStyles.tag, {
-                    backgroundColor: colors.cardBackground,
-                    borderColor: colors.accent
-                  }]}
-                >
-                  <Text style={[itemDetailStyles.tagText, { color: colors.accent }]}>
-                    #{tag}
-                  </Text>
-                </View>
+                  style={[
+                    itemDetailStyles.dot,
+                    {
+                      backgroundColor: index === activeImageIndex ? colors.accent : colors.subtitle,
+                      opacity: index === activeImageIndex ? 1 : 0.3,
+                    }
+                  ]}
+                />
               ))}
             </View>
-          )}
+          </View>
 
-          {/* Comentarios */}
-          <View style={itemDetailStyles.commentsSection}>
-            <Text style={[itemDetailStyles.sectionTitle, { color: colors.title }]}>
-              💬 Comentarios ({comments.length})
+          {/* Info del Item */}
+          <View style={itemDetailStyles.content}>
+            <View style={[itemDetailStyles.badge, { backgroundColor: colors.accent }]}>
+              <Text style={[itemDetailStyles.badgeText, { color: '#1a2332' }]}>
+                {item.category_label}
+              </Text>
+            </View>
+
+            <Text style={[itemDetailStyles.title, { color: colors.title }]}>
+              {item.title}
             </Text>
 
-            {comments.length > 0 ? (
-              comments.map((comment) => (
-                <View
-                  key={comment.id}
-                  style={[itemDetailStyles.commentCard, { backgroundColor: colors.cardBackground }]}
-                >
-                  <View style={itemDetailStyles.commentHeader}>
-                    <Text style={[itemDetailStyles.commentAuthor, { color: colors.title }]}
-                    numberOfLines={1} 
-                    ellipsizeMode="tail" 
-                    >
-                      {comment.autor_usuario}
-                    </Text>
-                    <Text style={[itemDetailStyles.commentDate, { color: colors.subtitle }]}>
-                      {formatDate(comment.fecha)}
+            <Text style={[itemDetailStyles.description, { color: colors.subtitle }]}>
+              {item.description}
+            </Text>
+
+            {item.longDescription && (
+              <Text style={[itemDetailStyles.longDescription, { color: colors.title }]}>
+                {item.longDescription}
+              </Text>
+            )}
+
+            <View style={itemDetailStyles.infoSection}>
+              <Text style={[itemDetailStyles.sectionTitle, { color: colors.title }]}>
+                📋 Información del Espécimen
+              </Text>
+              <View style={[itemDetailStyles.infoCard, { backgroundColor: colors.cardBackground }]}>
+                {item.period && (
+                  <View style={itemDetailStyles.infoRow}>
+                    <Text style={[itemDetailStyles.infoLabel, { color: colors.subtitle }]}>Período:</Text>
+                    <Text style={[itemDetailStyles.infoValue, { color: colors.title }]}>{item.period}</Text>
+                  </View>
+                )}
+                {item.discoveryDate && (
+                  <View style={itemDetailStyles.infoRow}>
+                    <Text style={[itemDetailStyles.infoLabel, { color: colors.subtitle }]}>Descubrimiento:</Text>
+                    <Text style={[itemDetailStyles.infoValue, { color: colors.title }]}>{item.discoveryDate}</Text>
+                  </View>
+                )}
+                {item.location && (
+                  <View style={itemDetailStyles.infoRow}>
+                    <Text style={[itemDetailStyles.infoLabel, { color: colors.subtitle }]}>Ubicación:</Text>
+                    <Text style={[itemDetailStyles.infoValue, { color: colors.title }]}>{item.location}</Text>
+                  </View>
+                )}
+                {item.dimensions && (
+                  <View style={itemDetailStyles.infoRow}>
+                    <Text style={[itemDetailStyles.infoLabel, { color: colors.subtitle }]}>Dimensiones:</Text>
+                    <Text style={[itemDetailStyles.infoValue, { color: colors.title }]}>{item.dimensions}</Text>
+                  </View>
+                )}
+                {item.weight && (
+                  <View style={itemDetailStyles.infoRow}>
+                    <Text style={[itemDetailStyles.infoLabel, { color: colors.subtitle }]}>Peso:</Text>
+                    <Text style={[itemDetailStyles.infoValue, { color: colors.title }]}>{item.weight}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {item.tags && item.tags.length > 0 && (
+              <View style={itemDetailStyles.tagsContainer}>
+                {item.tags.map((tag, index) => (
+                  <View
+                    key={index}
+                    style={[itemDetailStyles.tag, {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.accent
+                    }]}
+                  >
+                    <Text style={[itemDetailStyles.tagText, { color: colors.accent }]}>
+                      #{tag}
                     </Text>
                   </View>
-                  <Text style={[itemDetailStyles.commentContent, { color: colors.subtitle }]}>
-                    {comment.contenido}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              <View style={itemDetailStyles.emptyComments}>
-                <Text style={{ fontSize: 32 }}>💭</Text>
-                <Text style={[itemDetailStyles.emptyCommentsText, { color: colors.subtitle }]}>
-                  Aún no hay comentarios
-                </Text>
+                ))}
               </View>
             )}
+
+            {/* Comentarios */}
+            <View style={itemDetailStyles.commentsSection}>
+              <Text style={[itemDetailStyles.sectionTitle, { color: colors.title }]}>
+                💬 Comentarios ({comments.length})
+              </Text>
+
+              <CommentInput itemId={id} onCommentSent={fetchComments} />
+
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <View
+                    key={comment.id}
+                    style={[itemDetailStyles.commentCard, { backgroundColor: colors.cardBackground }]}
+                  >
+                    <View style={itemDetailStyles.commentHeader}>
+                      <Text style={[itemDetailStyles.commentAuthor, { color: colors.title }]}
+                        numberOfLines={1} 
+                        ellipsizeMode="tail"
+                      >
+                        {comment.autor_usuario}
+                      </Text>
+                      <Text style={[itemDetailStyles.commentDate, { color: colors.subtitle }]}>
+                        {formatDate(comment.fecha)}
+                      </Text>
+                    </View>
+                    <Text style={[itemDetailStyles.commentContent, { color: colors.subtitle }]}>
+                      {comment.contenido}
+                    </Text>
+                  </View>
+                ))
+              ) : (
+                <View style={itemDetailStyles.emptyComments}>
+                  <Text style={{ fontSize: 32 }}>💭</Text>
+                  <Text style={[itemDetailStyles.emptyCommentsText, { color: colors.subtitle }]}>
+                    Sé el primero en comentar
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* --- VISOR DE IMÁGENES CON ZOOM --- */}
+      <ImageViewing
+        images={imagesForViewer}
+        imageIndex={activeImageIndex}
+        visible={fullScreenVisible}
+        onRequestClose={() => setFullScreenVisible(false)}
+        swipeToCloseEnabled={true} // Cerrar deslizando hacia abajo
+        doubleTapToZoomEnabled={true} // Zoom con doble toque
+      />
+
     </SafeAreaView>
   );
 }

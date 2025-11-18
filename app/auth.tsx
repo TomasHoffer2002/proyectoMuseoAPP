@@ -7,6 +7,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { authStyles } from '../styles/AuthStyles';
+import { homeStyles } from '@/styles/HomeStyles';
 
 export default function AuthScreen() {
   const [isSupported, setIsSupported] = useState(false);
@@ -91,9 +92,8 @@ export default function AuthScreen() {
         />
       
       <View style={authStyles.content}>
-        {/* Logo/Ícono del museo */}
-        <View style={[authStyles.logo, { backgroundColor: colors.accent }]}>
-          <Text style={authStyles.logoText}>🏛️</Text>
+        <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
+          <Text style={homeStyles.logoText}>M</Text>
         </View>
 
         <Text style={[authStyles.title, { color: colors.title }]}>

@@ -23,6 +23,8 @@ export const homeStyles = StyleSheet.create({
   },
   logoText: {
     fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   headerTextContainer: {
     flex: 1,

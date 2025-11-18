@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StatusBar, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StatusBar, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native'; // <-- Importamos Linking
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { profileStyles } from '../../styles/ProfileStyles';
 import { CoinService } from '../../services/CoinService';
@@ -10,6 +10,13 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const ACTIVE_THEME_KEY = '@museum_active_theme';
 
+// Datos de los productos de ejemplo con sus links de Checkout
+const PRODUCT_OPTIONS = [
+  { coins: 50, price: '1.00', name: '50 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
+  { coins: 100, price: '2.99', name: '100 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
+  { coins: 500, price: '9.99', name: '500 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
+];
+
 export default function PerfilScreen() {
   const [coins, setCoins] = useState(0);
   const [itemsViewed, setItemsViewed] = useState(0);
@@ -17,77 +24,83 @@ export default function PerfilScreen() {
   const [collectorBadgeUnlocked, setCollectorBadgeUnlocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('Visitante del Museo');
+  
+  // controlar si está logueado
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Obtener colores según el tema activo
   const { colors, activeTheme, toggleTheme } = useTheme();
-
-  useFocusEffect(
-    useCallback(() => {
-      // Definimos la función que carga los datos
-      const loadUserData = async () => {
-        try {
-          setLoading(true);
-          
-          const storedUserName = await AsyncStorage.getItem('userName');
-          
-          if (storedUserName) {
-            setUserName(storedUserName);
-          } else {
-            // Si no hay nombre, resetea al valor por defecto
-            setUserName('Visitante del Museo'); 
-          }
-          
-          // Cargar estadísticas de monedas
-          const stats = await CoinService.getStats();
-          setCoins(stats.totalCoins);
-          setItemsViewed(stats.itemsViewed);
-
-          // Cargar beneficios desbloqueados
-          const benefits = await BenefitService.getUnlockedBenefits();
-          setNightThemeUnlocked(benefits.nightTheme);
-          setCollectorBadgeUnlocked(benefits.collectorBadge);
-        
-        } catch (error) {
-          console.error('Error al cargar datos del usuario:', error);
-          // En caso de error, también resetea
-          setUserName('Visitante del Museo');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      // Llamamos a la función
-      loadUserData();
-
-    }, []) // El array vacío asegura que la lógica no se repita innecesariamente
-  );
-
+  
+  // Definición de loadUserData para que esté disponible globalmente en el componente
   const loadUserData = async () => {
     try {
       setLoading(true);
-      //cargar nombre de usuario
+      
       const storedUserName = await AsyncStorage.getItem('userName');
+      // Verificamos si existe el userId para saber si está logueado
+      const storedUserId = await AsyncStorage.getItem('userId');
+      setIsLoggedIn(!!storedUserId); // Convierte a booleano (true si existe, false si es null)
+
       if (storedUserName) {
         setUserName(storedUserName);
+      } else {
+        setUserName('Visitante del Museo'); 
       }
       
-      // Cargar estadísticas de monedas
       const stats = await CoinService.getStats();
       setCoins(stats.totalCoins);
       setItemsViewed(stats.itemsViewed);
 
-      // Cargar beneficios desbloqueados
       const benefits = await BenefitService.getUnlockedBenefits();
       setNightThemeUnlocked(benefits.nightTheme);
       setCollectorBadgeUnlocked(benefits.collectorBadge);
+    
     } catch (error) {
       console.error('Error al cargar datos del usuario:', error);
+      setUserName('Visitante del Museo');
     } finally {
       setLoading(false);
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+    }, [])
+  );
+  
+  // --- FUNCIÓN CENTRAL DE COMPRA ---
+  const handleBuyCoins = async (option) => {
+    if (await Linking.canOpenURL(option.checkoutUrl)) {
+        
+        // Abrir la URL de Mercado Pago
+        Linking.openURL(option.checkoutUrl);
+        
+        // SIMULACIÓN DE ÉXITO
+        Alert.alert(
+            'Esperando Pago...',
+            `Fuiste redirigido a Mercado Pago para comprar ${option.coins} monedas por $${option.price}.\n\nUna vez que el pago se confirme (generalmente segundos), tu saldo se actualizará.\n\n[SIMULACIÓN]: ¿Deseas agregar las monedas ahora? (Borrar esto en Prod)`,
+            [
+                { text: 'Esperar (Real)', style: 'cancel' },
+                { 
+                    text: 'Confirmar Pago (SIMULACIÓN)', 
+                    onPress: async () => {
+                        await CoinService.addCoins(option.coins);
+                        loadUserData(); // Refrescar saldo
+                        Alert.alert('¡Éxito!', `Se agregaron ${option.coins} monedas a tu cuenta (Simulación de Webhook).`);
+                    } 
+                }
+            ]
+        );
+
+    } else {
+        Alert.alert('Error', 'No se pudo abrir la aplicación de Mercado Pago o el enlace.');
+    }
+  };
+  // ----------------------------------
+
+
   const handleUnlockBenefit = async (benefit) => {
+    // ... (Tu función de canje original) ...
     const currentCoins = await CoinService.getCoins();
 
     if (currentCoins < benefit.cost) {
@@ -106,11 +119,9 @@ export default function PerfilScreen() {
         {
           text: 'Canjear',
           onPress: async () => {
-            // Restar monedas
             const newCoins = await CoinService.subtractCoins(benefit.cost);
             
             if (newCoins !== null) {
-              // Desbloquear beneficio
               if (benefit.id === 'night_theme') {
                 await BenefitService.unlockNightTheme();
                 setNightThemeUnlocked(true);
@@ -256,11 +267,19 @@ export default function PerfilScreen() {
                     </View>
                   ) : (
                     <TouchableOpacity
-                      style={[profileStyles.unlockButton, { backgroundColor: colors.accent }]}
+                      // Estilos y disabled según isLoggedIn
+                      style={[
+                        profileStyles.unlockButton, 
+                        { 
+                          backgroundColor: isLoggedIn ? colors.accent : colors.subtitle, // Color gris si no logueado
+                          opacity: isLoggedIn ? 1 : 0.5 // Menos opacidad si no logueado
+                        }
+                      ]}
                       onPress={() => handleUnlockBenefit(benefit)}
+                      disabled={!isLoggedIn} // Deshabilita el toque
                     >
                       <Text style={[profileStyles.unlockButtonText, { color: '#1a2332' }]}>
-                        Canjear
+                        {isLoggedIn ? 'Canjear' : 'Logueate'}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -269,42 +288,41 @@ export default function PerfilScreen() {
             );
           })}
         </View>
+
+        {/* --- SECCIÓN DE COMPRA DE MONEDAS --- */}
         <View style={profileStyles.section}>
-          <TouchableOpacity
-            style={[profileStyles.buyCoinsButton, { backgroundColor: colors.accent }]}
-            onPress={() => {
-              Alert.alert(
-                'Comprar Monedas',
-                '¿Cuántas monedas deseas comprar?\n\n50 monedas = $1.99\n100 monedas = $2.99\n500 monedas = $9.99',
-                [
-                  { text: 'Cancelar', style: 'cancel' },
-                  {
-                    text: '50 monedas',
-                    onPress: async () => {
-                      await CoinService.addCoins(50);
-                      loadUserData();
-                      Alert.alert('¡Éxito!', 'Se agregaron 50 monedas a tu cuenta');
-                    }
-                  },
-                  {
-                    text: '100 monedas',
-                    onPress: async () => {
-                      await CoinService.addCoins(100);
-                      loadUserData();
-                      Alert.alert('¡Éxito!', 'Se agregaron 100 monedas a tu cuenta');
-                    }
-                  }
-                ]
-              );
-            }}
-          >
-            <View style={profileStyles.buyCoinsContent}>
-              <Text style={profileStyles.buyCoinsIcon}>🪙</Text>
-              <Text style={[profileStyles.buyCoinsText, { color: '#1a2332' }]}>
-                Comprar Monedas
-              </Text>
-            </View>
-          </TouchableOpacity>
+          <Text style={[profileStyles.sectionTitle, { color: colors.title, marginBottom: 15 }]}>
+            💰 Paquetes de Monedas
+          </Text>
+          
+          {PRODUCT_OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.coins}
+              // Estilos y disabled según isLoggedIn
+              style={[
+                profileStyles.buyCoinsButton, 
+                { 
+                    backgroundColor: colors.cardBackground, 
+                    borderWidth: 1, 
+                    borderColor: isLoggedIn ? colors.accent : colors.cardBorder,
+                    marginBottom: 12,
+                    opacity: isLoggedIn ? 1 : 0.5 // Menos opacidad si no logueado
+                }
+              ]}
+              onPress={() => handleBuyCoins(option)}
+              disabled={!isLoggedIn} // Deshabilita el toque
+            >
+              <View style={profileStyles.buyCoinsContent}>
+                <Text style={profileStyles.buyCoinsIcon}>🪙</Text>
+                <Text style={[profileStyles.buyCoinsText, { color: colors.title, flex: 1, textAlign: 'left' }]}>
+                  {option.name}
+                </Text>
+                <Text style={[profileStyles.buyCoinsText, { color: colors.accent, fontWeight: '700' }]}>
+                  ${option.price}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
         </View>
         {/* Espaciado final */}
         <View style={{ height: 40 }} />

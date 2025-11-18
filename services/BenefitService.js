@@ -83,9 +83,17 @@ export const BenefitService = {
     {
       id: 'collector_badge',
       name: 'Insignia de Coleccionista',
-      description: 'Badge especial que aparece en tu perfil',
+      description: 'Insignia especial que aparece sobre tu foto de perfil',
       icon: '🏆',
       cost: 200,
+      unlockKey: COLLECTOR_BADGE_KEY
+    },
+    {
+      id: 'visor_3d',
+      name: 'Visor 3D Avanzado',
+      description: 'Permite ver imagenes de las muestras en 3D',
+      icon: '🥽',
+      cost: 1000,
       unlockKey: COLLECTOR_BADGE_KEY
     }
   ]

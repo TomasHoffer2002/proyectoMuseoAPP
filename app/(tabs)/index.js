@@ -197,7 +197,7 @@ export default function HomeScreen() {
     }]}>
       <View style={homeStyles.logoContainer}>
         <View style={[homeStyles.logo, { backgroundColor: colors.accent }]}>
-          <Text style={homeStyles.logoText}>🏛️</Text>
+          <Text style={homeStyles.logoText}>M</Text>
         </View>
         <View style={homeStyles.headerTextContainer}>
           <Text style={[homeStyles.headerTitle, { color: colors.title }]}>

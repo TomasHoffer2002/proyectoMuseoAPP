@@ -31,7 +31,7 @@ export default function Scanner() {
   hasScannedRef.current = true;
 
   console.log("QR detectado:", type, data);
-  router.push({ pathname: "/item/[id]", params: { id: "1" } });
+  router.push({ pathname: "/item/[id]", params: { id: "3" } });
 };
 
   if (hasPermission === null) {
