@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'expo-router';
-import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  StatusBar,
-  Image,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import axios from 'axios';
-import { API_BASE_URL } from '../../config';
-import { searchStyles } from '../../styles/SearchStyles';
-import { useTheme } from '../../components/ThemeContext';
-import { CoinService } from '../../services/CoinService';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CoinNotification } from '../../components/molecules/CoinNotification';
+import { useTheme } from '../../components/ThemeContext';
+import { API_BASE_URL } from '../../config';
+import { CoinService } from '../../services/CoinService';
+import { searchStyles } from '../../styles/SearchStyles';
 
 
 export default function SearchScreen() {
@@ -179,12 +179,15 @@ export default function SearchScreen() {
           backgroundColor: colors.searchBackground,
           borderColor: colors.searchBorder,
         }]}>
+          {/* Ícono de búsqueda */}
           <FontAwesome 
             name="search" 
             size={18} 
             color={colors.searchIcon}
             style={searchStyles.searchIcon}
           />
+
+          {/* Campo de texto */}
           <TextInput
             style={[searchStyles.searchInput, { color: colors.title }]}
             placeholder="Buscar en el catálogo..."
@@ -192,6 +195,16 @@ export default function SearchScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+
+          {/* Botón QR */}
+          <TouchableOpacity onPress={() => router.push("/scanner")}>
+            <FontAwesome 
+              name="qrcode" 
+              size={22} 
+              color={colors.searchIcon}
+              style={{ marginLeft: 12 }}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Filtros por categoría */}

@@ -2,27 +2,26 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import axios from 'axios';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { CaruselApp } from '../../components/organisms/Carousel';
-import { useTheme } from '../../components/ThemeContext';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Image,
+  ScrollView,
   StatusBar,
   Text,
   TouchableOpacity,
-  View,
-  ScrollView
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { API_BASE_URL } from '../../config';
-import { homeStyles } from '../../styles/HomeStyles';
-import { CoinService } from '../../services/CoinService';
 import { CoinNotification } from '../../components/molecules/CoinNotification';
+import { CaruselApp } from '../../components/organisms/Carousel';
+import { useTheme } from '../../components/ThemeContext';
+import { API_BASE_URL } from '../../config';
+import { CoinService } from '../../services/CoinService';
+import { homeStyles } from '../../styles/HomeStyles';
 
 // IMPORTACIONES DE AUTENTICACIÓN 
-import { cerrarSesion, checkAuthStatus } from '../../services/login';
+import { cerrarSesion, checkAuthStatus } from '../../services/login.js';
 
 export default function HomeScreen() {
   const [items, setItems] = useState([]);
@@ -78,7 +77,7 @@ export default function HomeScreen() {
 
   // Función para abrir la Modal de Login
   const abrirModalLogin = useCallback(() => {
-    router.push('/modal');
+    router.push('/(modals)/loginModal');
   }, [router]);
 
 
