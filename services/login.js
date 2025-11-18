@@ -33,12 +33,16 @@ export async function iniciarSesion(usuario, password) {
     const token = data.token;
     //guardar nombre de usuario
     const userName = data.usuario.usuario;
+    //guardar id de usuario
+    const userId = data.usuario.id;
+    
 
     if (token && userName) {
       // 4. Almacenamiento del Token (Diferencia clave con React Web)
       // En React Native se usa AsyncStorage para almacenamiento persistente.
       await AsyncStorage.setItem('userToken', token);
       await AsyncStorage.setItem('userName', userName);
+      await AsyncStorage.setItem('userId', userId.toString());
       console.log('Token almacenado exitosamente.',userName);
       return data; // Devuelve los datos del usuario/token
     } else {
@@ -74,6 +78,7 @@ export async function cerrarSesion() {
     try {
         await AsyncStorage.removeItem('userToken');
         await AsyncStorage.removeItem('userName');
+        await AsyncStorage.removeItem('userId');
         console.log('Sesión cerrada exitosamente.');
     } catch (e) {
         console.error('Error al cerrar sesión:', e);
