@@ -2,8 +2,8 @@ import { router } from 'expo-router';
 import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
 // NOTA: Se elimina la importación de useThemeColors y de Colors
 import React, { useState } from 'react';
-import { useThemeColors } from '../constants/Colors.js';
-import { iniciarSesion } from '../services/login.js';
+import { useThemeColors } from '../../constants/Colors.js';
+import { iniciarSesion } from '../../services/login.js';
 
 
 // COLORES FIJOS
