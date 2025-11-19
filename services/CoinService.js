@@ -54,7 +54,7 @@ export const CoinService = {
       if (lastLogin !== today) {
         // Es otro dia al de hoy, por lo que se le entregan las monedas +10
         await AsyncStorage.setItem(LAST_LOGIN_KEY, today);
-        const newCoins = await CoinService.addCoins(10);
+        const newCoins = await CoinService.addCoins(100);
         return {
           earnedCoins: true,
           coins: 100,
@@ -89,7 +89,7 @@ export const CoinService = {
         await AsyncStorage.setItem(VIEWED_ITEMS_KEY, JSON.stringify(viewedItems));
         
         // Otorgar monedas
-        const newCoins = await CoinService.addCoins(5);
+        const newCoins = await CoinService.addCoins(50);
         return {
           earnedCoins: true,
           coins: 50,

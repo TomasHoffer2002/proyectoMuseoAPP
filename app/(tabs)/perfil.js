@@ -12,9 +12,9 @@ const ACTIVE_THEME_KEY = '@museum_active_theme';
 
 // Datos de los productos de ejemplo con sus links de Checkout
 const PRODUCT_OPTIONS = [
-  { coins: 50, price: '1.00', name: '50 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
-  { coins: 100, price: '2.99', name: '100 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
-  { coins: 500, price: '9.99', name: '500 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
+  { coins: 50, price: '1000', name: '50 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
+  { coins: 100, price: '1500', name: '100 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
+  { coins: 500, price: '3000', name: '500 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
 ];
 
 export default function PerfilScreen() {
@@ -71,36 +71,36 @@ export default function PerfilScreen() {
   // --- FUNCIÓN CENTRAL DE COMPRA ---
   const handleBuyCoins = async (option) => {
     if (await Linking.canOpenURL(option.checkoutUrl)) {
-        
-        // Abrir la URL de Mercado Pago
-        Linking.openURL(option.checkoutUrl);
-        
-        // SIMULACIÓN DE ÉXITO
-        Alert.alert(
-            'Esperando Pago...',
-            `Fuiste redirigido a Mercado Pago para comprar ${option.coins} monedas por $${option.price}.\n\nUna vez que el pago se confirme (generalmente segundos), tu saldo se actualizará.\n\n[SIMULACIÓN]: ¿Deseas agregar las monedas ahora? (Borrar esto en Prod)`,
-            [
-                { text: 'Esperar (Real)', style: 'cancel' },
-                { 
-                    text: 'Confirmar Pago (SIMULACIÓN)', 
-                    onPress: async () => {
-                        await CoinService.addCoins(option.coins);
-                        loadUserData(); // Refrescar saldo
-                        Alert.alert('¡Éxito!', `Se agregaron ${option.coins} monedas a tu cuenta (Simulación de Webhook).`);
-                    } 
-                }
-            ]
-        );
+  
+      Alert.alert(
+          'Confirmar Compra',
+          `Vas a ser redirigido a Mercado Pago para comprar ${option.coins} monedas.\n\nAl completar el pago, vuelve a esta pantalla.`,
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { 
+              text: 'Ir a Pagar', 
+              onPress: async () => {
+                // Abrir Mercado Pago
+                Linking.openURL(option.checkoutUrl);
+                        
+                // SUMAR MONEDAS (Simulación de éxito inmediata)
+                // Como no se hizo el backend, se asume que la compra fue exitosa   
+                setTimeout(async () => {
+                  await CoinService.addCoins(option.coins);
+                  loadUserData(); // Recargar para ver las nuevas monedas
+                            
+                  }, 3000); // Esperamos 3 segundos mientras se abre MP
+                } 
+            }
+          ]
+      );
 
     } else {
         Alert.alert('Error', 'No se pudo abrir la aplicación de Mercado Pago o el enlace.');
     }
   };
-  // ----------------------------------
-
 
   const handleUnlockBenefit = async (benefit) => {
-    // ... (Tu función de canje original) ...
     const currentCoins = await CoinService.getCoins();
 
     if (currentCoins < benefit.cost) {
@@ -110,37 +110,6 @@ export default function PerfilScreen() {
       );
       return;
     }
-
-    Alert.alert(
-      'Confirmar canje',
-      `¿Deseas canjear ${benefit.cost} monedas por "${benefit.name}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Canjear',
-          onPress: async () => {
-            const newCoins = await CoinService.subtractCoins(benefit.cost);
-            
-            if (newCoins !== null) {
-              if (benefit.id === 'night_theme') {
-                await BenefitService.unlockNightTheme();
-                setNightThemeUnlocked(true);
-              } else if (benefit.id === 'collector_badge') {
-                await BenefitService.unlockCollectorBadge();
-                setCollectorBadgeUnlocked(true);
-              }
-
-              setCoins(newCoins);
-              
-              Alert.alert(
-                '¡Desbloqueado!',
-                `Has desbloqueado: ${benefit.name}`
-              );
-            }
-          }
-        }
-      ]
-    );
   };
 
 
