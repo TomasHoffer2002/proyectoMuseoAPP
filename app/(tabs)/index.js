@@ -18,6 +18,7 @@ import { CaruselApp } from '../../components/organisms/Carousel';
 import { useTheme } from '../../components/ThemeContext';
 import { API_BASE_URL } from '../../config';
 import { CoinService } from '../../services/CoinService';
+import GPSBienvenida from "../../services/GPSBienvenida"; //Exporta el default directamente
 import { homeStyles } from '../../styles/HomeStyles';
 
 // IMPORTACIONES DE AUTENTICACIÓN 
@@ -38,6 +39,10 @@ export default function HomeScreen() {
     coins: 0,
     message: ''
   });
+
+  //GPS Bienvenida, solamente lo llama una vez al cargar la pantalla
+  // ----------------------------------------------------
+  GPSBienvenida();
 
   // ----------------------------------------------------
   // LOGICA DE AUTENTICACION
@@ -77,7 +82,7 @@ export default function HomeScreen() {
 
   // Función para abrir la Modal de Login
   const abrirModalLogin = useCallback(() => {
-    router.push('/(modals)/loginModal');
+    router.push('/loginModal');
   }, [router]);
 
 

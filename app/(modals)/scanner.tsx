@@ -24,7 +24,20 @@ export default function Scanner() {
       setHasPermission(status === "granted");
     };
     getCameraPermissions();
+    // timeout de 60 segundos
+    timeoutRef.current = setTimeout(() => {
+      console.log("Cerrando escáner por inactividad");
+      // Mensaje al usuario
+      alert("El escáner se cerró por no detectar ningún código en 60 segundos.");
+      router.back();
+    }, 60_000);
+
+    // limpiar timeout al desmontar
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, []);
+
 
   const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
   if (hasScannedRef.current) return; // bloquea múltiples disparos
