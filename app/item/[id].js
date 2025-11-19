@@ -23,6 +23,8 @@ import { API_BASE_URL } from '../../config';
 import { itemDetailStyles } from '../../styles/ItemDetailStyles';
 import CommentInput from '../../components/CommentInput';
 import ImageViewing from 'react-native-image-viewing';
+import { CoinService } from '../../services/CoinService';
+import { CoinNotification } from '../../components/molecules/CoinNotification';
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,6 +39,8 @@ export default function ItemDetailScreen() {
   // Estados para el carrusel y modal
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
+  // Estado para la notificación de monedas
+  const [coinNotification, setCoinNotification] = useState({ visible: false, message: '', coins: 0 });
 
   useEffect(() => {
     if (id) {
@@ -44,6 +48,31 @@ export default function ItemDetailScreen() {
       fetchComments();
     }
   }, [id]);
+
+  // Verificar si se otorgan monedas al cargar el item
+  useEffect(() => {
+    const checkViewReward = async () => {
+      if (item && item.id) {
+        const result = await CoinService.viewItem(item.id);
+        
+        if (result.earnedCoins) {
+          // Mostrar notificación
+          setCoinNotification({
+            visible: true,
+            coins: result.coins,
+            message: `¡Primera vez viendo: ${item.title}!`
+          });
+
+          // Ocultar después de 5 segundos
+          setTimeout(() => {
+            setCoinNotification(prev => ({ ...prev, visible: false }));
+          }, 5000);
+        }
+      }
+    };
+
+    checkViewReward();
+  }, [item]); // Se ejecuta cuando se carga la pantalla de la muestra
 
   const fetchItemDetail = async () => {
     try {
@@ -80,8 +109,8 @@ export default function ItemDetailScreen() {
                 left: 10,
                 zIndex: 10,
                 backgroundColor: colors.cardBackground,
-                width: 50,
-                height: 50,
+                width: 40,
+                height: 40,
                 borderRadius: 20,
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -146,7 +175,7 @@ export default function ItemDetailScreen() {
     <SafeAreaView style={[itemDetailStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
       <BtnReturn />
-      
+
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -311,6 +340,14 @@ export default function ItemDetailScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Notificación de monedas */}
+      <CoinNotification
+        visible={coinNotification.visible}
+        coins={coinNotification.coins}
+        message={coinNotification.message}
+        onHide={() => setCoinNotification({ ...coinNotification, visible: false })}
+      />
 
       {/* --- VISOR DE IMÁGENES CON ZOOM --- */}
       <ImageViewing

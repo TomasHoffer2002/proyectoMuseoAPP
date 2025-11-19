@@ -13,10 +13,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CoinNotification } from '../../components/molecules/CoinNotification';
 import { useTheme } from '../../components/ThemeContext';
 import { API_BASE_URL } from '../../config';
-import { CoinService } from '../../services/CoinService';
 import { searchStyles } from '../../styles/SearchStyles';
 
 
@@ -48,15 +46,6 @@ export default function SearchScreen() {
   }, [searchQuery, selectedCategory, items]);
 
   const handleItemPress = async (item) => {
-    // Otorgar monedas
-    const result = await CoinService.viewItem(item.id);
-    if (result.earnedCoins) {
-      setCoinNotification({
-        visible: true,
-        coins: result.coins,
-        message: `Primera vez viendo: ${item.title}`
-      });
-    }
     router.push(`/item/${item.id}`);
   };
 
@@ -164,13 +153,6 @@ export default function SearchScreen() {
   return (
     <SafeAreaView style={[searchStyles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-      {/* Notificación de monedas */}
-      <CoinNotification
-        visible={coinNotification.visible}
-        coins={coinNotification.coins}
-        message={coinNotification.message}
-        onHide={() => setCoinNotification({ ...coinNotification, visible: false })}
-      />
       
       {/* Sección de búsqueda y filtros */}
       <View style={searchStyles.searchSection}>

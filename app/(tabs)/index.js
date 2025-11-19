@@ -41,27 +41,22 @@ export default function HomeScreen() {
   });
 
   //GPS Bienvenida, solamente lo llama una vez al cargar la pantalla
-  // ----------------------------------------------------
   GPSBienvenida();
 
-  // ----------------------------------------------------
   // LOGICA DE AUTENTICACION
-  // ----------------------------------------------------
-
   // Función para verificar el estado de autenticación (lee AsyncStorage)
   const checkLoginStatus = useCallback(async () => {
     const status = await checkAuthStatus();
     setIsLoggedIn(status);
   }, []);
 
-  // 2. Hook para actualizar el estado cuando regresamos a esta pantalla (después de Login/Logout)
+  // Hook para actualizar el estado cuando regresamos a esta pantalla (después de Login/Logout)
   useFocusEffect(
     useCallback(() => {
       checkLoginStatus();
     }, [checkLoginStatus])
   );
-
-  // Manejador para cerrar sesión
+  
   const handleLogout = useCallback(() => {
     Alert.alert(
       "Cerrar Sesión",
@@ -128,15 +123,6 @@ export default function HomeScreen() {
 
   const handleItemPress = async (item) => {
     console.log('Item seleccionado:', item);
-    // Otorgar monedas por ver el item
-    const result = await CoinService.viewItem(item.id);
-    if (result.earnedCoins) {
-      setCoinNotification({
-        visible: true,
-        coins: result.coins,
-        message: `Primera vez viendo: ${item.title}`
-      });
-    }
     router.push(`/item/${item.id}`);
   };
 
