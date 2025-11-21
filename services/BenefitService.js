@@ -84,7 +84,7 @@ export const BenefitService = {
       id: 'collector_badge',
       name: 'Insignia de Coleccionista',
       description: 'Insignia especial que aparece sobre tu foto de perfil',
-      icon: '🏆',
+      icon: '🏅​',
       cost: 200,
       unlockKey: COLLECTOR_BADGE_KEY
     },

@@ -26,8 +26,8 @@ export default function GPSBienvenida() {
 
 
       // coordenadas de lugar OBJETIVO específico, la facu es (lat: -35.66801675625351, lon: -63.770988029094156)
-      const targetLat = -35.652714871051884; 
-      const targetLon = -63.75562910991631;
+      const targetLat = -35.66801675625351; 
+      const targetLon = -63.770988029094156;
       // calcular distancia aproximada, entre tu ubicacion y el lugar objetivo
       const targetCoord = { lat: targetLat, lon: targetLon };
       const distance = getDistanceFromLatLonInKm(userCoord, targetCoord);
