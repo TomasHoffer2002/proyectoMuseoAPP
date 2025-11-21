@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StatusBar, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native'; // <-- Importamos Linking
+import { View, Text, StatusBar, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native'; 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { profileStyles } from '../../styles/ProfileStyles';
 import { CoinService } from '../../services/CoinService';
@@ -10,7 +10,6 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const ACTIVE_THEME_KEY = '@museum_active_theme';
 
-// Datos de los productos de ejemplo con sus links de Checkout
 const PRODUCT_OPTIONS = [
   { coins: 50, price: '1000', name: '50 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
   { coins: 100, price: '1500', name: '100 Monedas', checkoutUrl: 'https://mpago.la/18NBNAn' },
@@ -25,20 +24,20 @@ export default function PerfilScreen() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('Visitante del Museo');
   
-  // controlar si está logueado
+  // Estado para controlar el login
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const { colors, activeTheme, toggleTheme } = useTheme();
   
-  // Definición de loadUserData para que esté disponible globalmente en el componente
   const loadUserData = async () => {
     try {
       setLoading(true);
       
       const storedUserName = await AsyncStorage.getItem('userName');
-      // Verificamos si existe el userId para saber si está logueado
+      // Verificamos el ID para saber si es un usuario real
       const storedUserId = await AsyncStorage.getItem('userId');
-      setIsLoggedIn(!!storedUserId); // Convierte a booleano (true si existe, false si es null)
+      const userIsLogged = !!storedUserId;
+      setIsLoggedIn(userIsLogged);
 
       if (storedUserName) {
         setUserName(storedUserName);
@@ -68,10 +67,15 @@ export default function PerfilScreen() {
     }, [])
   );
   
-  // --- FUNCIÓN CENTRAL DE COMPRA ---
+  // --- FUNCIÓN DE COMPRA ---
   const handleBuyCoins = async (option) => {
+    // Seguridad extra por si acaso
+    if (!isLoggedIn) {
+        Alert.alert("Atención", "Debes iniciar sesión para comprar.");
+        return;
+    }
+
     if (await Linking.canOpenURL(option.checkoutUrl)) {
-  
       Alert.alert(
           'Confirmar Compra',
           `Vas a ser redirigido a Mercado Pago para comprar ${option.coins} monedas.\n\nAl completar el pago, vuelve a esta pantalla.`,
@@ -83,14 +87,11 @@ export default function PerfilScreen() {
                 // Abrir Mercado Pago
                 Linking.openURL(option.checkoutUrl);
                         
-                // SUMAR MONEDAS (Simulación de éxito inmediata)
-                // Como no se hizo el backend, se asume que la compra fue exitosa   
+                // Sumar monedas con delay para simular éxito al volver
                 setTimeout(async () => {
                   await CoinService.addCoins(option.coins);
-                  loadUserData(); // Recargar para ver las nuevas monedas
-                            
-                  }, 3000); // Esperamos 3 segundos mientras se abre MP
-                } 
+                }, 3000); 
+              } 
             }
           ]
       );
@@ -100,7 +101,14 @@ export default function PerfilScreen() {
     }
   };
 
+  // --- FUNCIÓN DE CANJE ---
   const handleUnlockBenefit = async (benefit) => {
+    // Seguridad extra
+    if (!isLoggedIn) {
+        Alert.alert("Atención", "Debes iniciar sesión para canjear.");
+        return;
+    }
+
     const currentCoins = await CoinService.getCoins();
 
     if (currentCoins < benefit.cost) {
@@ -110,6 +118,37 @@ export default function PerfilScreen() {
       );
       return;
     }
+
+    Alert.alert(
+      'Confirmar canje',
+      `¿Deseas canjear ${benefit.cost} monedas por "${benefit.name}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Canjear',
+          onPress: async () => {
+            const newCoins = await CoinService.subtractCoins(benefit.cost);
+            
+            if (newCoins !== null) {
+              if (benefit.id === 'night_theme') {
+                await BenefitService.unlockNightTheme();
+                setNightThemeUnlocked(true);
+              } else if (benefit.id === 'collector_badge') {
+                await BenefitService.unlockCollectorBadge();
+                setCollectorBadgeUnlocked(true);
+              }
+
+              setCoins(newCoins);
+              
+              Alert.alert(
+                '¡Desbloqueado!',
+                `Has desbloqueado: ${benefit.name}`
+              );
+            }
+          }
+        }
+      ]
+    );
   };
 
 
@@ -134,7 +173,7 @@ export default function PerfilScreen() {
           <View style={[profileStyles.avatarContainer, { backgroundColor: colors.accent }]}>
             <Text style={profileStyles.avatarText}>👤</Text>
             {collectorBadgeUnlocked && (
-              <Text style={profileStyles.badge}>🏆</Text>
+              <Text style={profileStyles.badge}>🏅​</Text>
             )}
           </View>
           
@@ -164,7 +203,7 @@ export default function PerfilScreen() {
           </View>
         </View>
 
-        {/* Cambiar tema (solo si está desbloqueado) */}
+        {/* Cambiar tema */}
         {nightThemeUnlocked && (
           <View style={profileStyles.themeToggle}>
             <TouchableOpacity
@@ -236,18 +275,18 @@ export default function PerfilScreen() {
                     </View>
                   ) : (
                     <TouchableOpacity
-                      // Estilos y disabled según isLoggedIn
+                      // APLICAMOS ESTILOS Y DISABLED SEGÚN LOGIN
                       style={[
                         profileStyles.unlockButton, 
                         { 
-                          backgroundColor: isLoggedIn ? colors.accent : colors.subtitle, // Color gris si no logueado
-                          opacity: isLoggedIn ? 1 : 0.5 // Menos opacidad si no logueado
+                            backgroundColor: isLoggedIn ? colors.accent : colors.cardBorder, // Gris si no logueado
+                            opacity: isLoggedIn ? 1 : 0.5 
                         }
                       ]}
                       onPress={() => handleUnlockBenefit(benefit)}
-                      disabled={!isLoggedIn} // Deshabilita el toque
+                      disabled={!isLoggedIn} // Bloquea el toque si no está logueado
                     >
-                      <Text style={[profileStyles.unlockButtonText, { color: '#1a2332' }]}>
+                      <Text style={[profileStyles.unlockButtonText, { color: isLoggedIn ? '#1a2332' : colors.subtitle }]}>
                         {isLoggedIn ? 'Canjear' : 'Logueate'}
                       </Text>
                     </TouchableOpacity>
@@ -267,26 +306,26 @@ export default function PerfilScreen() {
           {PRODUCT_OPTIONS.map((option) => (
             <TouchableOpacity
               key={option.coins}
-              // Estilos y disabled según isLoggedIn
+              // APLICAMOS ESTILOS Y DISABLED SEGÚN LOGIN
               style={[
                 profileStyles.buyCoinsButton, 
                 { 
                     backgroundColor: colors.cardBackground, 
                     borderWidth: 1, 
-                    borderColor: isLoggedIn ? colors.accent : colors.cardBorder,
+                    borderColor: isLoggedIn ? colors.accent : colors.cardBorder, // Borde gris si no logueado
                     marginBottom: 12,
-                    opacity: isLoggedIn ? 1 : 0.5 // Menos opacidad si no logueado
+                    opacity: isLoggedIn ? 1 : 0.5 // Opacidad reducida si no logueado
                 }
               ]}
               onPress={() => handleBuyCoins(option)}
-              disabled={!isLoggedIn} // Deshabilita el toque
+              disabled={!isLoggedIn} // Bloquea el toque si no está logueado
             >
               <View style={profileStyles.buyCoinsContent}>
                 <Text style={profileStyles.buyCoinsIcon}>🪙</Text>
                 <Text style={[profileStyles.buyCoinsText, { color: colors.title, flex: 1, textAlign: 'left' }]}>
                   {option.name}
                 </Text>
-                <Text style={[profileStyles.buyCoinsText, { color: colors.accent, fontWeight: '700' }]}>
+                <Text style={[profileStyles.buyCoinsText, { color: isLoggedIn ? colors.accent : colors.subtitle, fontWeight: '700' }]}>
                   ${option.price}
                 </Text>
               </View>
